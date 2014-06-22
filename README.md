@@ -1,14 +1,13 @@
 # lwjgl-test
 
-Test project for Clojure and OpenGL(with LWJGL).
+Test project with Clojure and OpenGL(with LWJGL).
 
 ## Usage
 
-lein run
+$ lein run
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014 nyamakawa2
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Public Domain
