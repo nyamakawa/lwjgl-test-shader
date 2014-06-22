@@ -44,10 +44,10 @@
 
   ;; check compile status
   (def compiled?
-    (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))
-  (println compiled?)
+    (= 1 (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS)))
+  (println "compiled? :" compiled?)
 
-  (if (= compiled? 1)
+  (if compiled?
     ;;return shader
     shader
 
@@ -72,7 +72,7 @@
 
 (defn start []
   (Display/setDisplayMode display-mode)
-  (Display/setTitle "Hello")
+  (Display/setTitle "Hello GL")
   (Display/create)
 
   (def vertex-shader (load-shader GL20/GL_VERTEX_SHADER vertex-shader-src))
@@ -86,6 +86,6 @@
 
 
 (defn -main [& args]
-  (println "test")
+  (println "Starting...")
   (start)
   )

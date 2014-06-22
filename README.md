@@ -1,4 +1,4 @@
-# lwjgl-test
+# lwjgl-test-shader
 
 Test project with Clojure and OpenGL(with LWJGL).
 
