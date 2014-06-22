@@ -58,12 +58,8 @@
   )
 
 (defn draw []
-  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
-  (GL11/glBegin GL11/GL_LINES)
 
-
-  (GL11/glEnd)
-  (GL11/glFlush))
+)
 
 (defn shader-program-error [program]
   (let [log-length (GL20/glGetProgrami program GL20/GL_INFO_LOG_LENGTH)]
