@@ -1,8 +1,8 @@
 (ns lwjgl-test.util)
 
-(import '[java.nio ByteBuffer])
+(import '[java.nio ByteBuffer FloatBuffer])
 
-(defn prepare-string [strdata]
+(defn pack-string-to-bytes [strdata]
   (let [strlen (count strdata)
         version 66
         buflen (+ 1 4 (count strdata))
@@ -16,4 +16,13 @@
       (.get buf))
     buf))
 
-(defn hoge [] "hoge")
+(defn pack-float-array [numseq]
+  (let [version 66
+        buflen (count numseq)
+        ff (FloatBuffer/allocate buflen)
+        buf (float-array buflen)]
+    (doto ff
+      (.put (float-array numseq))
+      (.rewind))
+    ff))
+

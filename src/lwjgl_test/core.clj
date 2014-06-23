@@ -2,7 +2,9 @@
 
 (require '[lwjgl-test.util :as util])
 
-(import '[org.lwjgl.opengl DisplayMode Display GL11 GL20])
+(import '[org.lwjgl.opengl DisplayMode Display GL11 GL20 Util])
+(import '[org.lwjgl BufferUtils])
+;;(require '[org.lwjgl.opengl.util :as lwjgl-util])
 
 (def width 640)
 (def height 480)
@@ -27,8 +29,14 @@
   ")
 
 (defn put-error [log]
-  (println log)
-  )
+  (println log))
+
+(defn shader-error [shader]
+     (let [log-length (GL20/glGetShaderi shader GL20/GL_INFO_LOG_LENGTH)]
+      (let [error-log (GL20/glGetShaderInfoLog shader log-length)]
+        (put-error error-log)
+        (GL20/glDeleteShader shader)
+        nil)))
 
 ;; shader-type: glEnum
 ;; shader-src:  shader string
@@ -49,17 +57,30 @@
 
   (if compiled?
     shader
-    (let [log-length (GL20/glGetShaderi shader GL20/GL_INFO_LOG_LENGTH)]
-      (let [error-log (GL20/glGetShaderInfoLog shader log-length)]
-        (put-error error-log)
-        (GL20/glDeleteShader shader)
-        nil
-        )))
-  )
+    (shader-error shader)))
 
-(defn draw []
+(defn draw [program]
+  (def vertices [0.0 0.5 0.0
+                 -0.5 -0.5 0.0
+                 0.5 -0.5 0.0
+                 0.5 0.5 0.0
+                 0.0 0.5 0.0
+                 0.5 -0.5 0.0])
+  (def vertices-buffer (BufferUtils/createFloatBuffer (count vertices)))
+  (doto vertices-buffer
+     (.put (float-array vertices)))
 
-)
+  (GL11/glViewport 0 0 width height)
+  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+
+  (GL20/glUseProgram program)
+  (GL20/glVertexAttribPointer 0 3 false 0 vertices-buffer)
+  (GL20/glEnableVertexAttribArray 0)
+
+
+  (GL11/glDrawArrays GL11/GL_TRIANGLES 0 (/ (count vertices) 3))
+
+  (Util/checkGLError))
 
 (defn shader-program-error [program]
   (let [log-length (GL20/glGetProgrami program GL20/GL_INFO_LOG_LENGTH)]
@@ -71,21 +92,31 @@
 (defn draw-loop-with-program [program]
   (GL11/glClearColor 0.0 0.0 0.0 0.0)
 
+  (println "trace 1")
   (while (not (Display/isCloseRequested))
-    (draw)
+
+    (draw program)
     (Display/update))
 
   (Display/destroy))
 
 (defn start-draw-loop [vertex-shader pixel-shader]
   (let [program (GL20/glCreateProgram)]
+    (println "program: " program)
+
     (if-not (= program 0)
       (do
         (GL20/glAttachShader program vertex-shader)
         (GL20/glAttachShader program pixel-shader)
 
+        (GL20/glLinkProgram program)
+
         (let [linked? (= GL11/GL_TRUE (GL20/glGetProgrami program GL20/GL_LINK_STATUS))]
+
+          (GL20/glBindAttribLocation program 0 "vPosition")
+
           (if linked?
+
             (draw-loop-with-program program)
             (shader-program-error program)
             ))))))
@@ -98,11 +129,12 @@
 
   (def vertex-shader (load-shader GL20/GL_VERTEX_SHADER vertex-shader-src))
   (def pixel-shader (load-shader GL20/GL_FRAGMENT_SHADER pixel-shader-src))
+  (println "vertex-shader: " vertex-shader)
+  (println "pixel-shader: " pixel-shader)
 
   (if (and vertex-shader pixel-shader)
-    start-draw-loop))
+    (start-draw-loop vertex-shader pixel-shader)))
 
 (defn -main [& args]
   (println "Starting...")
-  (start)
-  )
+  (start))
