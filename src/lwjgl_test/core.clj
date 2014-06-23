@@ -24,7 +24,7 @@
   //precision mediump float
   void main()
   {
-  gl_FragColor = vec4 ( 1.0, 1.0, 0.0, 1.0 );
+  gl_FragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );
   }
   ")
 
@@ -62,13 +62,11 @@
 (defn draw [program]
   (def vertices [0.0 0.5 0.0
                  -0.5 -0.5 0.0
-                 0.5 -0.5 0.0
-                 0.5 0.5 0.0
-                 0.0 0.5 0.0
                  0.5 -0.5 0.0])
   (def vertices-buffer (BufferUtils/createFloatBuffer (count vertices)))
   (doto vertices-buffer
-     (.put (float-array vertices)))
+     (.put (float-array vertices))
+     (.flip))
 
   (GL11/glViewport 0 0 width height)
   (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
@@ -76,7 +74,6 @@
   (GL20/glUseProgram program)
   (GL20/glVertexAttribPointer 0 3 false 0 vertices-buffer)
   (GL20/glEnableVertexAttribArray 0)
-
 
   (GL11/glDrawArrays GL11/GL_TRIANGLES 0 (/ (count vertices) 3))
 
