@@ -1,6 +1,6 @@
 # lwjgl-test-shader
 
-Test project with Clojure and OpenGL(with LWJGL).
+Test project for Clojure and OpenGL(with LWJGL).
 
 ## Usage
 
