@@ -2,7 +2,7 @@
 
 (require '[lwjgl-test.util :as util])
 
-(import '[org.lwjgl.opengl DisplayMode Display GL11 GL20 Util])
+(import '[org.lwjgl.opengl DisplayMode Display GL11 GL15 GL20 Util])
 (import '[org.lwjgl BufferUtils])
 ;;(require '[org.lwjgl.opengl.util :as lwjgl-util])
 
@@ -59,6 +59,12 @@
     shader
     (shader-error shader)))
 
+(defn check-error []
+  (let [gl-error (GL11/glGetError)]
+    (if (not (= GL11/GL_NO_ERROR))
+      (println "error: " (Util/translateGLErrorString gl-error))
+    )))
+
 (defn draw [program]
   (def vertices [0.0 0.5 0.0
                  -0.5 -0.5 0.0
@@ -72,8 +78,19 @@
   (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
 
   (GL20/glUseProgram program)
-  (GL20/glVertexAttribPointer 0 3 false 0 vertices-buffer)
-  (GL20/glEnableVertexAttribArray 0)
+  ;;(GL20/glVertexAttribPointer 0 3 false 0 vertices-buffer)
+  (let [buf-id (GL15/glGenBuffers)]
+;;    (println "buf-id: " buf-id)
+    (check-error)
+    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER buf-id)
+    (check-error)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER vertices-buffer GL15/GL_STATIC_DRAW)
+    (check-error)
+    )
+
+;;  (GL20/glEnableVertexAttribArray 0)
+  (GL11/glEnableClientState GL11/GL_VERTEX_ARRAY)
+  (GL11/glVertexPointer 3 GL11/GL_FLOAT 0 0)
 
   (GL11/glDrawArrays GL11/GL_TRIANGLES 0 (/ (count vertices) 3))
 
