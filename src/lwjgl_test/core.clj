@@ -11,9 +11,20 @@
 (def vertex-shader-src
   "
   attribute vec4 vPosition;
+  uniform float angle;
+
+  float PI = 3.14159265358979323846264;
+  float rad_angle = angle*PI/180.0;
+
   void main()
   {
-  gl_Position = vPosition;
+  vec4 a = vPosition;
+  vec4 b = a;
+  b.x = a.x*cos(rad_angle) - a.y*sin(rad_angle);
+  b.y = a.y*cos(rad_angle) + a.x*sin(rad_angle);
+  gl_Position = gl_ModelViewProjectionMatrix*b;
+
+  //gl_Position = vPosition;
   }
   ")
 
@@ -104,14 +115,22 @@
       (GL20/glDeleteProgram program)
       nil))
 
+(def angle-step 0.15)
+
 (defn draw-loop-with-program [program]
   (GL11/glClearColor 0.0 0.0 0.0 0.0)
 
   (println "trace 1")
-  (while (not (Display/isCloseRequested))
+  (loop [angle 0.0]
+    (if-not (Display/isCloseRequested)
+      (do
+        (println "angle: " angle)
+        (let [angle-loc (GL20/glGetUniformLocation program "angle")]
+          (GL20/glUniform1f angle-loc angle))
 
-    (draw program)
-    (Display/update))
+        (draw program)
+        (Display/update)
+        (recur (mod (+ angle angle-step) 360.0)))))
 
   (Display/destroy))
 
