@@ -1,9 +1,7 @@
-(ns lwjgl-test.core)
-
-(require '[lwjgl-test.util :as util])
-
-(import '[org.lwjgl.opengl DisplayMode Display GL11 GL15 GL20 Util])
-(import '[org.lwjgl BufferUtils])
+(ns lwjgl-test.core
+  (:require [lwjgl-test.util :as util])
+  (:import [org.lwjgl.opengl DisplayMode Display GL11 GL15 GL20 Util]
+            [org.lwjgl BufferUtils]))
 ;;(require '[org.lwjgl.opengl.util :as lwjgl-util])
 
 (def width 640)
