@@ -12,7 +12,7 @@
 
 ;; generate triangle
 (defn gen-triangle []
-  [0.0 0.5 0.0
+  [0.0 0.366 0.0
    -0.5 -0.5 0.0
    0.5 -0.5 0.0])
 

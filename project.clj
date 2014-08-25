@@ -12,6 +12,7 @@
                   ;; LWJGL stores natives in the root of the jar; this
                   ;; :native-prefix will extract them.
                   :native-prefix ""]
+                 [net.mikera/core.matrix "0.29.1"]]
 ;;                  :jvm-opts [~(str "-Djava.library.path=native/:"
 ;;                   (System/getProperty "java.library.path"))]
-                 ])
+                 )

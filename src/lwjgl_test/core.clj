@@ -23,7 +23,8 @@
   vec4 b = a;
   b.x = a.x*cos(rad_angle) - a.y*sin(rad_angle);
   b.y = a.y*cos(rad_angle) + a.x*sin(rad_angle);
-  gl_Position = gl_ModelViewProjectionMatrix*b;
+//  gl_Position = gl_ModelViewProjectionMatrix*b;
+  gl_Position = b;
 
   //gl_Position = vPosition;
   }
@@ -111,7 +112,7 @@
       (GL20/glDeleteProgram program)
       nil))
 
-(def angle-step 0.15)
+(def angle-step 0.4)
 
 ;; runs draw loop
 (defn draw-loop-with-program [program]
