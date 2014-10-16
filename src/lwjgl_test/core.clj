@@ -156,6 +156,8 @@
   (Display/setTitle "Hello GL")
   (Display/create)
 
+  (println "GL_VERSION:" (GL11/glGetString GL11/GL_VERSION))
+
   (let [vertex-shader (load-shader GL20/GL_VERTEX_SHADER vertex-shader-src)
         pixel-shader (load-shader GL20/GL_FRAGMENT_SHADER pixel-shader-src)]
       (do
