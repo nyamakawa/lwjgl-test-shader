@@ -82,7 +82,7 @@
 ;; drawing function (runs once in each draw loop)
 (defn draw [program]
   (let [triangle (util/gen-triangle)
-        model (util/gen-polygon triangle)]
+        model (util/mesh-with-vertices triangle)]
     (do
       (GL11/glViewport 0 0 width height)
       (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
@@ -170,4 +170,6 @@
 
 (defn -main [& args]
   (println "Starting...")
-  (start))
+  (let [mesh (util/read-obj-file "cube.obj")]
+    (util/print-mesh mesh)))
+;;  (start))
