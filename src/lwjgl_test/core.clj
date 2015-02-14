@@ -44,65 +44,77 @@
 
 ;; shader error handling
 (defn shader-error [shader]
-     (let [log-length (GL20/glGetShaderi shader GL20/GL_INFO_LOG_LENGTH)
-           error-log (GL20/glGetShaderInfoLog shader log-length)]
-        (put-error error-log)
-        (GL20/glDeleteShader shader)
-        nil))
+  (let [log-length (GL20/glGetShaderi shader GL20/GL_INFO_LOG_LENGTH)
+        error-log (GL20/glGetShaderInfoLog shader log-length)]
+    (put-error error-log)
+    (GL20/glDeleteShader shader)
+    nil))
 
 ;; load shader
 ;; shader-type: glEnum
 ;; shader-src:  shader string
 (defn load-shader [shader-type shader-src]
   (let [shader (GL20/glCreateShader shader-type)]
-  ;; convert string to java.nio.ByteBuffer
-  ;;  (def shader-bytes (util/prepare-string shader-src))
-    (do
-      (println "shader: " shader)
-      (println "shader-src: " shader-src)
+    (println "shader: " shader)
+    (println "shader-src: " shader-src)
 
-      (GL20/glShaderSource shader shader-src)
-      (GL20/glCompileShader shader)
+    (GL20/glShaderSource shader shader-src)
+    (GL20/glCompileShader shader)
 
-  ;; check compile status
-      (let [compiled? (= GL11/GL_TRUE (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))]
-        (do
-          (println "compiled? :" compiled?)
-          (if compiled?
-            shader
-            (shader-error shader)))))))
+    ;; check compile status
+    (let [compiled? (= GL11/GL_TRUE (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))]
+      (println "compiled? :" compiled?)
+      (if compiled?
+        shader
+        (shader-error shader)))))
 
 ;; gl error handling
 (defn check-error []
   (let [gl-error (GL11/glGetError)]
     (if (not (= GL11/GL_NO_ERROR))
-      (println "error: " (Util/translateGLErrorString gl-error))
-    )))
+      (println "error: " (Util/translateGLErrorString gl-error)))))
+
+; bind mesh to gl buffers;
+(defn bind-vertex-buffers [mesh]
+  ; bind vertices
+  (let [buf-id (GL15/glGenBuffers)]
+    ;;    (println "buf-id: " buf-id)
+    (check-error)
+    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER buf-id)
+    (check-error)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (:vertex-buffer mesh) GL15/GL_STATIC_DRAW)
+    (check-error))
+
+  ; indexed buffer
+  (if (util/mesh-indexed? mesh)
+    (let [buf-id (GL15/glGenBuffers)]
+      ;;    (println "buf-id: " buf-id)
+      (check-error)
+      (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER buf-id)
+      (check-error)
+      (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (:index-buffer mesh) GL15/GL_STATIC_DRAW)
+      (check-error))))
 
 ;; drawing function (runs once in each draw loop)
-(defn draw [program]
-  (let [triangle (util/gen-triangle)
-        model (util/mesh-with-vertices triangle)]
-    (do
-      (GL11/glViewport 0 0 width height)
-      (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+(defn draw [program mesh]
+;  (let [triangle (util/gen-triangle)
+;        model (util/mesh-with-vertices triangle)]
+    (GL11/glViewport 0 0 width height)
+    (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
 
-      (GL20/glUseProgram program)
-      ;; generate and bind vertex buffer
-      (let [buf-id (GL15/glGenBuffers)]
-        ;;    (println "buf-id: " buf-id)
-        (do
-          (check-error)
-          (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER buf-id)
-          (check-error)
-          (GL15/glBufferData GL15/GL_ARRAY_BUFFER (:vertex-buffer model) GL15/GL_STATIC_DRAW)
-          (check-error))))
+    (GL20/glUseProgram program)
 
-    ;;
+    ;; bind vertex buffers
+    (bind-vertex-buffers mesh)
+
+    ;; draw calls
     (GL11/glEnableClientState GL11/GL_VERTEX_ARRAY)
     (GL11/glVertexPointer 3 GL11/GL_FLOAT 0 0)
-    (GL11/glDrawArrays GL11/GL_TRIANGLES 0 3)
-    (Util/checkGLError)))
+
+    (if (util/mesh-indexed? mesh)
+      (GL11/glDrawArrays GL11/GL_TRIANGLES 0 3)
+      (GL11/glDrawElements GL11/GL_TRIANGLES (util/count-indices mesh) GL11/GL_UNSIGNED_SHORT 0))
+    (Util/checkGLError))
 
 ;; program error
 (defn shader-program-error [program]
@@ -115,9 +127,10 @@
 (def angle-step 0.4)
 
 ;; runs draw loop
-(defn draw-loop-with-program [program]
+(defn draw-loop-with-program [program mesh]
   (GL11/glClearColor 0.0 0.0 0.0 0.0)
 
+  (println "(util/mesh-indexed? mesh)" (util/mesh-indexed? mesh))
   (println "trace 1")
   (loop [angle 0.0]
     (if-not (Display/isCloseRequested)
@@ -126,7 +139,7 @@
         (let [angle-loc (GL20/glGetUniformLocation program "angle")]
           (GL20/glUniform1f angle-loc angle))
 
-        (draw program)
+        (draw program mesh)
         (Display/update)
         (recur (mod (+ angle angle-step) 360.0)))))
 
@@ -147,9 +160,11 @@
           (GL20/glBindAttribLocation program 0 "vPosition")
 
           (if linked?
-            (draw-loop-with-program program)
-            (shader-program-error program)
-            ))))))
+            (do
+              (let [mesh (util/read-obj-file "cube.obj")
+                    model (util/generate-mesh-buffers mesh)]
+                (draw-loop-with-program program model)))
+            (shader-program-error program)))))))
 
 (defn start []
   (Display/setDisplayMode display-mode)
@@ -171,5 +186,6 @@
 (defn -main [& args]
   (println "Starting...")
   (let [mesh (util/read-obj-file "cube.obj")]
-    (util/print-mesh mesh)))
-;;  (start))
+    (if (= (first args) "dump")
+      (util/print-mesh mesh))
+    (start)))

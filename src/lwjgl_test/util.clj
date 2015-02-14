@@ -16,9 +16,25 @@
   [0.0 0.366 0.0
    -0.5 -0.5 0.0
    0.5 -0.5 0.0])
-
-;; def mesh
+;;
+;; def mesh struct and utilities
+;;
 (defstruct polygon-mesh :vertices :indices :vertex-buffer :index-buffer :polygon-count)
+
+(defn mesh-indexed? [mesh]
+  (or (= (mesh :indices) [])
+      (= (mesh :indices) nil)))
+
+(defn count-indices [mesh]
+  (count (:indices mesh)))
+
+(defn count-vertices [mesh]
+  (count (:vertices mesh)))
+
+(defn count-triangles [mesh]
+  (if (mesh-indexed? mesh)
+    (/ (count-indices mesh) 3)
+    (/ (count-vertices mesh) 3)))
 
 (defn mesh-with-vertices [vertices]
   (struct-map polygon-mesh
@@ -35,11 +51,14 @@
   (assoc mesh
     :vertex-buffer (to-float-buffer (:vertices mesh))
     :index-buffer (to-float-buffer (:indices mesh))
-    :polygon-count))
+    :polygon-count (count-triangles mesh)))
 
 (defn print-mesh [mesh]
   (print mesh))
 
+;;
+;; wavefront obj file parser
+;;
 (defn parse-floats [vars]
   (mapv #(Float/parseFloat %) vars))
 
