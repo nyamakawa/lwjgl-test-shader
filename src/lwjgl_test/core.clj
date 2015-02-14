@@ -97,8 +97,6 @@
 
 ;; drawing function (runs once in each draw loop)
 (defn draw [program mesh]
-;  (let [triangle (util/gen-triangle)
-;        model (util/mesh-with-vertices triangle)]
     (GL11/glViewport 0 0 width height)
     (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
 
@@ -112,8 +110,8 @@
     (GL11/glVertexPointer 3 GL11/GL_FLOAT 0 0)
 
     (if (util/mesh-indexed? mesh)
-      (GL11/glDrawArrays GL11/GL_TRIANGLES 0 3)
       (GL11/glDrawElements GL11/GL_TRIANGLES (util/count-indices mesh) GL11/GL_UNSIGNED_SHORT 0))
+      (GL11/glDrawArrays GL11/GL_TRIANGLES 0 3)
     (Util/checkGLError))
 
 ;; program error
@@ -161,6 +159,8 @@
 
           (if linked?
             (do
+;              (let [triangle (util/gen-triangle)
+;                 model (util/mesh-with-vertices triangle)]
               (let [mesh (util/read-obj-file "cube.obj")
                     model (util/generate-mesh-buffers mesh)]
                 (draw-loop-with-program program model)))

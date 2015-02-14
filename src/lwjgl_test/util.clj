@@ -11,6 +11,14 @@
         (.flip))
       vertices-buffer)))
 
+(defn to-int-buffer [array-of-int]
+    (let [int-buffer (BufferUtils/createIntBuffer (count array-of-int))]
+    (do
+      (doto int-buffer
+        (.put (int-array array-of-int))
+        (.flip))
+      int-buffer)))
+
 ;; generate triangle
 (defn gen-triangle []
   [0.0 0.366 0.0
@@ -22,8 +30,8 @@
 (defstruct polygon-mesh :vertices :indices :vertex-buffer :index-buffer :polygon-count)
 
 (defn mesh-indexed? [mesh]
-  (or (= (mesh :indices) [])
-      (= (mesh :indices) nil)))
+  (not (or (= (mesh :indices) [])
+    (= (mesh :indices) nil))))
 
 (defn count-indices [mesh]
   (count (:indices mesh)))
@@ -50,7 +58,7 @@
 (defn generate-mesh-buffers [mesh]
   (assoc mesh
     :vertex-buffer (to-float-buffer (:vertices mesh))
-    :index-buffer (to-float-buffer (:indices mesh))
+    :index-buffer (to-int-buffer (:indices mesh))
     :polygon-count (count-triangles mesh)))
 
 (defn print-mesh [mesh]
@@ -70,13 +78,15 @@
     (concat (:vertices mesh) (parse-floats vars))))
 
 (defn parse-indices [mesh vars]
-  (assoc mesh :vertices
-    (concat (:vertices mesh) (parse-integers vars))))
+;  (println "parse-indices:" vars)
+  (assoc mesh :indices
+    (concat (:indices mesh) (parse-integers vars))))
 
 (defn read-obj-line [line mesh]
   (let [tokens (str/split line #"\s+")]
     (let [line-type (first tokens)
           line-vars (rest tokens)]
+;        (println "tokens:" tokens)
         (cond (= line-type "v")
                 (parse-vertices mesh line-vars)
               (= line-type "f")
